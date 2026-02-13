@@ -62,6 +62,20 @@ function LiveFeed() {
 
 export default function Home() {
   const [email, setEmail] = useState('')
+  const [waitlistMsg, setWaitlistMsg] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const joinWaitlist = async () => {
+    if (!email || !email.includes('@')) { setWaitlistMsg('Please enter a valid email'); return }
+    setLoading(true)
+    try {
+      const res = await fetch('/api/waitlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) })
+      const data = await res.json()
+      setWaitlistMsg(data.message || 'Added!')
+      setEmail('')
+    } catch { setWaitlistMsg('Error — try again') }
+    setLoading(false)
+  }
 
   return (
     <main className="min-h-screen">
@@ -86,10 +100,11 @@ export default function Home() {
               onChange={e => setEmail(e.target.value)}
               className="px-5 py-3 bg-[#111] border border-[#333] rounded-lg text-white w-72 focus:border-[#00ff88] focus:outline-none transition"
             />
-            <button className="px-8 py-3 bg-[#00ff88] text-black font-bold rounded-lg hover:bg-[#00dd77] transition">
-              Get Free Alerts
+            <button onClick={joinWaitlist} disabled={loading} className="px-8 py-3 bg-[#00ff88] text-black font-bold rounded-lg hover:bg-[#00dd77] transition disabled:opacity-50">
+              {loading ? 'Joining...' : 'Get Free Alerts'}
             </button>
           </div>
+          {waitlistMsg && <p className="text-sm text-[#00ff88] mb-2">{waitlistMsg}</p>}
           <p className="text-sm text-gray-500">No credit card required. 3 free alerts per day.</p>
         </div>
       </section>

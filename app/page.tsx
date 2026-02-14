@@ -1,58 +1,33 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
-const features = [
-  { icon: '⚡', title: 'Real-Time Alerts', desc: 'Get notified within seconds of unusual volume spikes, price movements, and whale transactions across 500+ tokens.' },
-  { icon: '🐋', title: 'Whale Tracking', desc: 'Monitor wallets holding $1M+. Know when smart money moves before it hits your feed.' },
-  { icon: '📊', title: 'Volume Anomalies', desc: 'ML-powered detection of unusual trading patterns. Catches pumps 5-15 minutes before they trend.' },
-]
+const OWNER_CODE = 'skipper2026'
 
-const plans = [
-  { name: 'Free', price: '$0', period: '/forever', features: ['3 alerts per day', 'Top 50 tokens', 'Email alerts', '15-min delay'], cta: 'Start Free', accent: false },
-  { name: 'Pro', price: '$29', period: '/month', features: ['Unlimited alerts', '500+ tokens', 'Telegram + Discord', 'Real-time (< 5 sec)', 'Whale wallet tracking', 'Custom filters', 'API access'], cta: 'Go Pro', accent: true },
-  { name: 'Fund', price: '$99', period: '/month', features: ['Everything in Pro', 'DEX + CEX coverage', 'Order flow analysis', 'Smart money labels', 'Backtesting engine', 'Priority support', 'White-label option'], cta: 'Contact Us', accent: false },
-]
+type Alert = { token: string; type: string; change: string; severity: string; price: number; volume: number; timestamp: string }
 
-type Alert = { token: string; type: string; change: string; time: string; severity: 'high' | 'medium' | 'low' }
+function LiveFeed({ alerts }: { alerts: Alert[] }) {
+  const sevColor: Record<string, string> = {
+    high: 'text-red-400 bg-red-400/10',
+    medium: 'text-yellow-400 bg-yellow-400/10',
+    low: 'text-green-400 bg-green-400/10',
+  }
 
-function LiveFeed() {
-  const [alerts, setAlerts] = useState<Alert[]>([])
-
-  useEffect(() => {
-    const tokens = ['BTC', 'ETH', 'SOL', 'DOGE', 'PEPE', 'WIF', 'BONK', 'JUP', 'ONDO', 'ARB', 'OP', 'AVAX', 'LINK', 'UNI', 'AAVE']
-    const types = ['Volume Spike', 'Whale Buy', 'Whale Sell', 'Price Breakout', 'Unusual Options', 'Smart Money In']
-    const severities: ('high' | 'medium' | 'low')[] = ['high', 'medium', 'low']
-
-    const add = () => {
-      const a: Alert = {
-        token: tokens[Math.floor(Math.random() * tokens.length)],
-        type: types[Math.floor(Math.random() * types.length)],
-        change: `+${(Math.random() * 400 + 50).toFixed(0)}%`,
-        time: 'just now',
-        severity: severities[Math.floor(Math.random() * 3)],
-      }
-      setAlerts(prev => [a, ...prev].slice(0, 8))
-    }
-
-    add(); add(); add()
-    const iv = setInterval(add, 3000 + Math.random() * 4000)
-    return () => clearInterval(iv)
-  }, [])
-
-  const sevColor = { high: 'text-red-400 bg-red-400/10', medium: 'text-yellow-400 bg-yellow-400/10', low: 'text-green-400 bg-green-400/10' }
+  if (alerts.length === 0) {
+    return <p className="text-gray-500 text-center py-8">Scanning... waiting for signals</p>
+  }
 
   return (
-    <div className="w-full max-w-2xl mx-auto space-y-2">
+    <div className="w-full max-w-3xl mx-auto space-y-2">
       {alerts.map((a, i) => (
-        <div key={i} className="flex items-center justify-between bg-[#111] border border-[#222] rounded-lg px-4 py-3 animate-[fadeIn_0.3s_ease-out]">
+        <div key={i} className="flex items-center justify-between bg-[#111] border border-[#222] rounded-lg px-4 py-3">
           <div className="flex items-center gap-3">
-            <span className={`text-xs px-2 py-1 rounded font-mono font-bold ${sevColor[a.severity]}`}>{a.severity.toUpperCase()}</span>
+            <span className={`text-xs px-2 py-1 rounded font-mono font-bold ${sevColor[a.severity] || sevColor.low}`}>{a.severity.toUpperCase()}</span>
             <span className="font-bold text-white">{a.token}</span>
             <span className="text-sm text-gray-400">{a.type}</span>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-green-400 font-mono font-bold">{a.change}</span>
-            <span className="text-xs text-gray-500">{a.time}</span>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-400 font-mono">${a.price < 1 ? a.price.toFixed(4) : a.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+            <span className={`font-mono font-bold ${a.change.startsWith('+') || a.change.startsWith('$') ? 'text-green-400' : 'text-red-400'}`}>{a.change}</span>
           </div>
         </div>
       ))}
@@ -61,9 +36,47 @@ function LiveFeed() {
 }
 
 export default function Home() {
+  const [alerts, setAlerts] = useState<Alert[]>([])
+  const [scanned, setScanned] = useState(0)
+  const [lastScan, setLastScan] = useState('')
+  const [isOwner, setIsOwner] = useState(false)
+  const [codeInput, setCodeInput] = useState('')
+  const [showCodePrompt, setShowCodePrompt] = useState(false)
   const [email, setEmail] = useState('')
   const [waitlistMsg, setWaitlistMsg] = useState('')
   const [loading, setLoading] = useState(false)
+  const [checkoutMsg, setCheckoutMsg] = useState('')
+
+  const fetchAlerts = useCallback(async () => {
+    try {
+      const res = await fetch('/api/scan')
+      const data = await res.json()
+      setAlerts(data.alerts || [])
+      setScanned(data.scanned || 0)
+      setLastScan(new Date(data.timestamp).toLocaleTimeString())
+    } catch { /* silent */ }
+  }, [])
+
+  useEffect(() => {
+    // Check localStorage for owner
+    if (typeof window !== 'undefined' && localStorage.getItem('alpha_owner') === 'true') {
+      setIsOwner(true)
+    }
+    fetchAlerts()
+    const iv = setInterval(fetchAlerts, 60000) // refresh every 60s
+    return () => clearInterval(iv)
+  }, [fetchAlerts])
+
+  const checkCode = () => {
+    if (codeInput === OWNER_CODE) {
+      setIsOwner(true)
+      localStorage.setItem('alpha_owner', 'true')
+      setShowCodePrompt(false)
+      setCodeInput('')
+    } else {
+      setCodeInput('')
+    }
+  }
 
   const joinWaitlist = async () => {
     if (!email || !email.includes('@')) { setWaitlistMsg('Please enter a valid email'); return }
@@ -77,111 +90,209 @@ export default function Home() {
     setLoading(false)
   }
 
+  const handleCheckout = async (plan: string) => {
+    setCheckoutMsg('')
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan, email: email || undefined }),
+      })
+      const data = await res.json()
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        setCheckoutMsg(data.error || 'Checkout coming soon — join the waitlist!')
+      }
+    } catch {
+      setCheckoutMsg('Checkout coming soon — join the waitlist!')
+    }
+  }
+
+  const visibleAlerts = isOwner ? alerts : alerts.slice(0, 3)
+
   return (
     <main className="min-h-screen">
+      {/* Owner badge */}
+      {isOwner && (
+        <div className="bg-[#7b2ff7] text-white text-center py-1 text-sm font-mono">
+          OWNER MODE — Full access unlocked
+        </div>
+      )}
+
       {/* Hero */}
       <section className="relative overflow-hidden px-4 pt-20 pb-16 text-center">
         <div className="absolute inset-0 bg-gradient-to-b from-[#00ff8810] to-transparent pointer-events-none" />
         <div className="relative z-10 max-w-4xl mx-auto">
-          <div className="inline-block px-4 py-1 mb-6 text-sm font-mono text-[#00ff88] bg-[#00ff8810] border border-[#00ff8830] rounded-full">
-            LIVE — Scanning 500+ tokens right now
-          </div>
           <h1 className="text-5xl md:text-7xl font-extrabold mb-6 bg-gradient-to-r from-white via-[#00ff88] to-[#7b2ff7] bg-clip-text text-transparent leading-tight">
-            Detect Unusual Crypto Activity Before Everyone Else
+            AlphaScanner
           </h1>
           <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
-            Volume spikes. Whale movements. Smart money flows. Get alerts 5-15 minutes before it trends on Twitter.
+            Real-time unusual crypto activity detection. Powered by CoinGecko data. No fake numbers, no simulated feeds — what you see is what&apos;s happening.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-12">
-            <input
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className="px-5 py-3 bg-[#111] border border-[#333] rounded-lg text-white w-72 focus:border-[#00ff88] focus:outline-none transition"
-            />
-            <button onClick={joinWaitlist} disabled={loading} className="px-8 py-3 bg-[#00ff88] text-black font-bold rounded-lg hover:bg-[#00dd77] transition disabled:opacity-50">
-              {loading ? 'Joining...' : 'Get Free Alerts'}
-            </button>
-          </div>
-          {waitlistMsg && <p className="text-sm text-[#00ff88] mb-2">{waitlistMsg}</p>}
-          <p className="text-sm text-gray-500">No credit card required. 3 free alerts per day.</p>
-        </div>
-      </section>
-
-      {/* Live Feed Demo */}
-      <section className="px-4 py-16">
-        <h2 className="text-3xl font-bold text-center mb-2">Live Alert Feed</h2>
-        <p className="text-gray-400 text-center mb-8">Real signals. Real time. This is what you get.</p>
-        <LiveFeed />
-      </section>
-
-      {/* Features */}
-      <section className="px-4 py-16">
-        <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8">
-          {features.map((f, i) => (
-            <div key={i} className="bg-[#111] border border-[#222] rounded-xl p-8 hover:border-[#00ff8840] transition">
-              <div className="text-4xl mb-4">{f.icon}</div>
-              <h3 className="text-xl font-bold mb-2 text-white">{f.title}</h3>
-              <p className="text-gray-400">{f.desc}</p>
+          {!isOwner && (
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-4">
+              <input
+                type="email"
+                placeholder="Enter your email for updates"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                className="px-5 py-3 bg-[#111] border border-[#333] rounded-lg text-white w-72 focus:border-[#00ff88] focus:outline-none transition"
+              />
+              <button onClick={joinWaitlist} disabled={loading} className="px-8 py-3 bg-[#00ff88] text-black font-bold rounded-lg hover:bg-[#00dd77] transition disabled:opacity-50">
+                {loading ? 'Joining...' : 'Join Waitlist'}
+              </button>
             </div>
-          ))}
+          )}
+          {waitlistMsg && <p className="text-sm text-[#00ff88] mb-2">{waitlistMsg}</p>}
         </div>
       </section>
 
-      {/* Social Proof */}
-      <section className="px-4 py-12 text-center">
-        <div className="flex justify-center gap-12 flex-wrap text-gray-400">
-          <div><span className="block text-3xl font-bold text-white">12,847</span>Alerts sent today</div>
-          <div><span className="block text-3xl font-bold text-white">2,341</span>Active traders</div>
-          <div><span className="block text-3xl font-bold text-white">94%</span>Signal accuracy</div>
-          <div><span className="block text-3xl font-bold text-white">5 min</span>Avg. early detection</div>
+      {/* Live Feed */}
+      <section className="px-4 py-16">
+        <div className="flex justify-between items-center max-w-3xl mx-auto mb-4">
+          <h2 className="text-2xl font-bold">Live Alerts</h2>
+          <div className="text-sm text-gray-500">
+            {scanned > 0 && <span>{scanned} tokens scanned</span>}
+            {lastScan && <span className="ml-3">Last scan: {lastScan}</span>}
+          </div>
+        </div>
+        <LiveFeed alerts={visibleAlerts} />
+        {!isOwner && alerts.length > 3 && (
+          <p className="text-center text-gray-500 mt-4 text-sm">
+            Showing 3 of {alerts.length} alerts.{' '}
+            <button onClick={() => setShowCodePrompt(true)} className="text-[#00ff88] underline">
+              Enter owner code
+            </button>{' '}
+            for full access.
+          </p>
+        )}
+        {isOwner && (
+          <p className="text-center text-gray-500 mt-4 text-sm">
+            Showing all {alerts.length} alerts. Auto-refreshes every 60 seconds.
+          </p>
+        )}
+      </section>
+
+      {/* How It Works */}
+      <section className="px-4 py-16 max-w-3xl mx-auto">
+        <h2 className="text-2xl font-bold mb-8 text-center">How It Works</h2>
+        <div className="grid md:grid-cols-3 gap-8">
+          <div className="text-center">
+            <div className="text-3xl mb-3">📡</div>
+            <h3 className="font-bold mb-2">Scan</h3>
+            <p className="text-sm text-gray-400">Pulls real market data from CoinGecko every 60 seconds. Top 100 tokens by market cap.</p>
+          </div>
+          <div className="text-center">
+            <div className="text-3xl mb-3">🔍</div>
+            <h3 className="font-bold mb-2">Detect</h3>
+            <p className="text-sm text-gray-400">Flags tokens with &gt;15% price movement or &gt;$1B volume. Sorted by severity.</p>
+          </div>
+          <div className="text-center">
+            <div className="text-3xl mb-3">🔔</div>
+            <h3 className="font-bold mb-2">Alert</h3>
+            <p className="text-sm text-gray-400">Shows results instantly. No delay, no paywall on the data itself.</p>
+          </div>
         </div>
       </section>
 
       {/* Pricing */}
-      <section className="px-4 py-16" id="pricing">
-        <h2 className="text-3xl font-bold text-center mb-2">Simple Pricing</h2>
-        <p className="text-gray-400 text-center mb-12">Start free. Upgrade when you need more.</p>
-        <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8">
-          {plans.map((p, i) => (
-            <div key={i} className={`rounded-xl p-8 ${p.accent ? 'bg-gradient-to-b from-[#00ff8815] to-[#111] border-2 border-[#00ff88] scale-105' : 'bg-[#111] border border-[#222]'}`}>
-              <h3 className="text-lg font-bold mb-1">{p.name}</h3>
-              <div className="mb-6">
-                <span className="text-4xl font-extrabold text-white">{p.price}</span>
-                <span className="text-gray-500">{p.period}</span>
-              </div>
-              <ul className="space-y-3 mb-8">
-                {p.features.map((f, j) => (
-                  <li key={j} className="flex items-center gap-2 text-sm">
-                    <span className="text-[#00ff88]">✓</span> {f}
-                  </li>
-                ))}
-              </ul>
-              <button className={`w-full py-3 rounded-lg font-bold transition ${p.accent ? 'bg-[#00ff88] text-black hover:bg-[#00dd77]' : 'bg-[#222] text-white hover:bg-[#333]'}`}>
-                {p.cta}
-              </button>
-            </div>
-          ))}
+      <section className="px-4 py-16 max-w-4xl mx-auto" id="pricing">
+        <h2 className="text-2xl font-bold mb-2 text-center">Pricing</h2>
+        <p className="text-gray-400 text-center mb-10">Start free. Upgrade when you need the edge.</p>
+        <div className="grid md:grid-cols-3 gap-6">
+          {/* Free */}
+          <div className="bg-[#111] border border-[#222] rounded-xl p-6">
+            <h3 className="font-bold text-lg mb-1">Free</h3>
+            <p className="text-3xl font-extrabold mb-4">$0<span className="text-sm text-gray-500 font-normal">/mo</span></p>
+            <ul className="text-sm text-gray-400 space-y-2 mb-6">
+              <li>Top 100 tokens scanned</li>
+              <li>60-second refresh</li>
+              <li>3 alerts visible</li>
+              <li>Web dashboard only</li>
+            </ul>
+            <div className="text-center text-sm text-gray-500">Current plan</div>
+          </div>
+          {/* Pro */}
+          <div className="bg-[#111] border-2 border-[#00ff88] rounded-xl p-6 relative">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#00ff88] text-black text-xs font-bold px-3 py-1 rounded-full">POPULAR</div>
+            <h3 className="font-bold text-lg mb-1">Pro</h3>
+            <p className="text-3xl font-extrabold mb-4">$29<span className="text-sm text-gray-500 font-normal">/mo</span></p>
+            <ul className="text-sm text-gray-400 space-y-2 mb-6">
+              <li>Top 500 tokens + DEX</li>
+              <li>15-second refresh</li>
+              <li>Unlimited alerts</li>
+              <li>Telegram notifications</li>
+              <li>Custom filters</li>
+              <li>API access</li>
+            </ul>
+            <button onClick={() => handleCheckout('pro')} className="w-full py-3 bg-[#00ff88] text-black font-bold rounded-lg hover:bg-[#00dd77] transition">
+              Subscribe — $29/mo
+            </button>
+          </div>
+          {/* Fund */}
+          <div className="bg-[#111] border border-[#7b2ff7] rounded-xl p-6">
+            <h3 className="font-bold text-lg mb-1">Fund</h3>
+            <p className="text-3xl font-extrabold mb-4">$99<span className="text-sm text-gray-500 font-normal">/mo</span></p>
+            <ul className="text-sm text-gray-400 space-y-2 mb-6">
+              <li>Everything in Pro</li>
+              <li>Whale wallet tracking</li>
+              <li>Smart money flow alerts</li>
+              <li>Backtesting engine</li>
+              <li>Priority support</li>
+              <li>Multi-exchange scanning</li>
+            </ul>
+            <button onClick={() => handleCheckout('fund')} className="w-full py-3 bg-[#7b2ff7] text-white font-bold rounded-lg hover:bg-[#6a20e0] transition">
+              Subscribe — $99/mo
+            </button>
+          </div>
+        </div>
+        {checkoutMsg && <p className="text-center text-sm mt-4 text-yellow-400">{checkoutMsg}</p>}
+      </section>
+
+      {/* Roadmap */}
+      <section className="px-4 py-16 max-w-3xl mx-auto">
+        <h2 className="text-2xl font-bold mb-8 text-center">Roadmap</h2>
+        <div className="space-y-4">
+          <div className="bg-[#111] border border-[#00ff8840] rounded-lg p-4">
+            <span className="text-[#00ff88] text-xs font-mono">NOW</span>
+            <p className="font-bold mt-1">Free scanner — top 100 tokens, 60s refresh, real CoinGecko data</p>
+          </div>
+          <div className="bg-[#111] border border-[#222] rounded-lg p-4">
+            <span className="text-yellow-400 text-xs font-mono">NEXT</span>
+            <p className="font-bold mt-1">Telegram alerts, DEX token scanning, whale wallet tracking</p>
+          </div>
+          <div className="bg-[#111] border border-[#222] rounded-lg p-4">
+            <span className="text-gray-500 text-xs font-mono">LATER</span>
+            <p className="font-bold mt-1">Pro tier ($29/mo) — custom filters, API access, backtesting</p>
+          </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="px-4 py-20 text-center">
-        <h2 className="text-4xl font-bold mb-4">Stop Trading Blind</h2>
-        <p className="text-gray-400 mb-8 max-w-lg mx-auto">Join 2,341 traders who see unusual activity before it trends. Free forever plan available.</p>
-        <button className="px-10 py-4 bg-[#00ff88] text-black font-bold text-lg rounded-lg hover:bg-[#00dd77] transition">
-          Start Scanning Free
-        </button>
-      </section>
+      {/* Owner Code Modal */}
+      {showCodePrompt && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50" onClick={() => setShowCodePrompt(false)}>
+          <div className="bg-[#111] border border-[#333] rounded-xl p-6 w-80" onClick={e => e.stopPropagation()}>
+            <h3 className="font-bold mb-4">Owner Access</h3>
+            <input
+              type="password"
+              placeholder="Enter passcode"
+              value={codeInput}
+              onChange={e => setCodeInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && checkCode()}
+              className="w-full px-4 py-2 bg-[#0a0a0a] border border-[#333] rounded-lg text-white mb-3 focus:border-[#7b2ff7] focus:outline-none"
+              autoFocus
+            />
+            <button onClick={checkCode} className="w-full py-2 bg-[#7b2ff7] text-white font-bold rounded-lg hover:bg-[#6a20e0] transition">
+              Unlock
+            </button>
+          </div>
+        </div>
+      )}
 
       <footer className="border-t border-[#222] py-8 px-4 text-center text-sm text-gray-500">
-        <p>AlphaScanner © 2026. Not financial advice. Past signals don't guarantee future results.</p>
+        <p>AlphaScanner © 2026. Data from CoinGecko. Not financial advice.</p>
       </footer>
-
-      <style jsx global>{`
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
-      `}</style>
     </main>
   )
 }

@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://alpha-scanner-theta.vercel.app/sitemap.xml

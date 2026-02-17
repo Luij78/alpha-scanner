@@ -3,32 +3,126 @@ import { useState, useEffect, useCallback } from 'react'
 
 const OWNER_CODE = 'skipper2026'
 
-type Alert = { token: string; type: string; change: string; severity: string; price: number; volume: number; timestamp: string }
+type Alert = {
+  token: string
+  name?: string
+  type: string
+  change: string
+  severity: string
+  price: number
+  volume: number | string
+  volume24h?: number
+  timestamp: string
+  // Enhanced signal fields
+  signal?: 'BUY' | 'SELL' | 'WATCH' | 'HOLD'
+  strength?: 'STRONG' | 'MODERATE' | 'WEAK'
+  score?: number
+  change24h?: number
+  change7d?: number
+  change30d?: number
+  reasoning?: string
+  triggers?: string[]
+  risks?: string[]
+}
 
-function LiveFeed({ alerts }: { alerts: Alert[] }) {
-  const sevColor: Record<string, string> = {
-    high: 'text-red-400 bg-red-400/10',
-    medium: 'text-yellow-400 bg-yellow-400/10',
-    low: 'text-green-400 bg-green-400/10',
+type MarketSummary = {
+  buys: number
+  sells: number
+  watches: number
+  marketSentiment: string
+}
+
+function SignalBadge({ signal, strength }: { signal: string; strength?: string }) {
+  const styles: Record<string, string> = {
+    BUY: 'bg-green-500/20 text-green-400 border border-green-500/50',
+    SELL: 'bg-red-500/20 text-red-400 border border-red-500/50',
+    WATCH: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50',
+    HOLD: 'bg-gray-500/20 text-gray-400 border border-gray-500/30',
   }
+  const emoji: Record<string, string> = { BUY: '🟢', SELL: '🔴', WATCH: '👁️', HOLD: '⏸️' }
+  return (
+    <span className={`text-xs px-2 py-1 rounded font-mono font-bold ${styles[signal] || styles.HOLD}`}>
+      {emoji[signal] || ''} {signal}{strength && strength !== 'WEAK' ? ` (${strength})` : ''}
+    </span>
+  )
+}
 
+function ScoreBar({ score }: { score: number }) {
+  const color = score >= 62 ? '#22c55e' : score >= 45 ? '#eab308' : '#ef4444'
+  return (
+    <div className="flex items-center gap-2">
+      <div className="w-16 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+        <div className="h-full rounded-full transition-all" style={{ width: `${score}%`, backgroundColor: color }} />
+      </div>
+      <span className="text-xs font-mono" style={{ color }}>{score}</span>
+    </div>
+  )
+}
+
+function LiveFeed({ alerts, summary }: { alerts: Alert[], summary?: MarketSummary }) {
   if (alerts.length === 0) {
     return <p className="text-gray-500 text-center py-8">Scanning... waiting for signals</p>
   }
 
   return (
-    <div className="w-full max-w-3xl mx-auto space-y-2">
+    <div className="w-full max-w-4xl mx-auto space-y-2">
+      {/* Market sentiment bar */}
+      {summary && (
+        <div className="flex gap-4 text-sm mb-4 bg-[#0a0a0a] border border-[#222] rounded-lg px-4 py-3 items-center">
+          <span className="text-gray-400">Market:</span>
+          <span className={`font-bold ${summary.marketSentiment === 'BULLISH' ? 'text-green-400' : summary.marketSentiment === 'BEARISH' ? 'text-red-400' : 'text-yellow-400'}`}>
+            {summary.marketSentiment === 'BULLISH' ? '📈' : summary.marketSentiment === 'BEARISH' ? '📉' : '➡️'} {summary.marketSentiment}
+          </span>
+          <span className="text-green-400 ml-4">🟢 {summary.buys} BUY</span>
+          <span className="text-yellow-400">👁️ {summary.watches} WATCH</span>
+          <span className="text-red-400">🔴 {summary.sells} SELL</span>
+        </div>
+      )}
+      
       {alerts.map((a, i) => (
-        <div key={i} className="flex items-center justify-between bg-[#111] border border-[#222] rounded-lg px-4 py-3">
-          <div className="flex items-center gap-3">
-            <span className={`text-xs px-2 py-1 rounded font-mono font-bold ${sevColor[a.severity] || sevColor.low}`}>{a.severity.toUpperCase()}</span>
-            <span className="font-bold text-white">{a.token}</span>
-            <span className="text-sm text-gray-400">{a.type}</span>
+        <div key={i} className={`bg-[#111] border rounded-lg px-4 py-3 ${
+          a.signal === 'BUY' ? 'border-green-500/30' : 
+          a.signal === 'SELL' ? 'border-red-500/30' : 
+          a.signal === 'WATCH' ? 'border-yellow-500/30' : 
+          'border-[#222]'
+        }`}>
+          {/* Main row */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {a.signal ? (
+                <SignalBadge signal={a.signal} strength={a.strength} />
+              ) : (
+                <span className="text-xs px-2 py-1 rounded font-mono font-bold bg-gray-500/20 text-gray-400">{a.type}</span>
+              )}
+              <span className="font-bold text-white">{a.token}</span>
+              {a.name && <span className="text-xs text-gray-500">{a.name}</span>}
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-400 font-mono">${a.price < 1 ? a.price.toFixed(4) : a.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+              {a.score !== undefined && <ScoreBar score={a.score} />}
+              <span className={`font-mono font-bold text-sm ${a.change.startsWith('+') ? 'text-green-400' : a.change.startsWith('-') ? 'text-red-400' : 'text-gray-400'}`}>{a.change}</span>
+            </div>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-400 font-mono">${a.price < 1 ? a.price.toFixed(4) : a.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
-            <span className={`font-mono font-bold ${a.change.startsWith('+') || a.change.startsWith('$') ? 'text-green-400' : 'text-red-400'}`}>{a.change}</span>
-          </div>
+          
+          {/* Multi-timeframe row */}
+          {(a.change7d !== undefined || a.change30d !== undefined) && (
+            <div className="flex gap-4 mt-1.5 text-xs font-mono text-gray-500">
+              {a.change24h !== undefined && (
+                <span className={a.change24h > 0 ? 'text-green-400/70' : 'text-red-400/70'}>24h: {a.change24h > 0 ? '+' : ''}{a.change24h.toFixed(1)}%</span>
+              )}
+              {a.change7d !== undefined && (
+                <span className={a.change7d > 0 ? 'text-green-400/70' : 'text-red-400/70'}>7d: {a.change7d > 0 ? '+' : ''}{a.change7d.toFixed(1)}%</span>
+              )}
+              {a.change30d !== undefined && (
+                <span className={a.change30d > 0 ? 'text-green-400/70' : 'text-red-400/70'}>30d: {a.change30d > 0 ? '+' : ''}{a.change30d.toFixed(1)}%</span>
+              )}
+            </div>
+          )}
+          
+          {/* Reasoning */}
+          {a.reasoning && (
+            <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">{a.reasoning}</p>
+          )}
         </div>
       ))}
     </div>
@@ -39,6 +133,7 @@ export default function Home() {
   const [alerts, setAlerts] = useState<Alert[]>([])
   const [scanned, setScanned] = useState(0)
   const [lastScan, setLastScan] = useState('')
+  const [summary, setSummary] = useState<MarketSummary | undefined>()
   const [isOwner, setIsOwner] = useState(false)
   const [codeInput, setCodeInput] = useState('')
   const [showCodePrompt, setShowCodePrompt] = useState(false)
@@ -54,6 +149,7 @@ export default function Home() {
       setAlerts(data.alerts || [])
       setScanned(data.scanned || 0)
       setLastScan(new Date(data.timestamp).toLocaleTimeString())
+      setSummary(data.summary)
     } catch { /* silent */ }
   }, [])
 
@@ -157,7 +253,7 @@ export default function Home() {
             {lastScan && <span className="ml-3">Last scan: {lastScan}</span>}
           </div>
         </div>
-        <LiveFeed alerts={visibleAlerts} />
+        <LiveFeed alerts={visibleAlerts} summary={summary} />
         {!isOwner && alerts.length > 3 && (
           <p className="text-center text-gray-500 mt-4 text-sm">
             Showing 3 of {alerts.length} alerts.{' '}
@@ -176,23 +272,35 @@ export default function Home() {
 
       {/* How It Works */}
       <section className="px-4 py-16 max-w-3xl mx-auto">
-        <h2 className="text-2xl font-bold mb-8 text-center">How It Works</h2>
-        <div className="grid md:grid-cols-3 gap-8">
-          <div className="text-center">
-            <div className="text-3xl mb-3">📡</div>
-            <h3 className="font-bold mb-2">Scan</h3>
-            <p className="text-sm text-gray-400">Pulls real market data from CoinGecko every 60 seconds. Top 100 tokens by market cap.</p>
+        <h2 className="text-2xl font-bold mb-4 text-center">How Signals Work</h2>
+        <p className="text-gray-400 text-center text-sm mb-8">Multi-timeframe momentum scoring — not just price alerts</p>
+        <div className="grid md:grid-cols-4 gap-6">
+          <div className="text-center bg-[#111] border border-[#222] rounded-lg p-4">
+            <div className="text-2xl mb-2">📅</div>
+            <h3 className="font-bold mb-1 text-sm">30-Day Trend</h3>
+            <p className="text-xs text-gray-400">40% of score. Main direction.</p>
           </div>
-          <div className="text-center">
-            <div className="text-3xl mb-3">🔍</div>
-            <h3 className="font-bold mb-2">Detect</h3>
-            <p className="text-sm text-gray-400">Flags tokens with &gt;15% price movement or &gt;$1B volume. Sorted by severity.</p>
+          <div className="text-center bg-[#111] border border-[#222] rounded-lg p-4">
+            <div className="text-2xl mb-2">📈</div>
+            <h3 className="font-bold mb-1 text-sm">7-Day Momentum</h3>
+            <p className="text-xs text-gray-400">30% of score. Intermediate trend.</p>
           </div>
-          <div className="text-center">
-            <div className="text-3xl mb-3">🔔</div>
-            <h3 className="font-bold mb-2">Alert</h3>
-            <p className="text-sm text-gray-400">Shows results instantly. No delay, no paywall on the data itself.</p>
+          <div className="text-center bg-[#111] border border-[#222] rounded-lg p-4">
+            <div className="text-2xl mb-2">⚡</div>
+            <h3 className="font-bold mb-1 text-sm">24h Action</h3>
+            <p className="text-xs text-gray-400">20% of score. Entry timing.</p>
           </div>
+          <div className="text-center bg-[#111] border border-[#222] rounded-lg p-4">
+            <div className="text-2xl mb-2">💧</div>
+            <h3 className="font-bold mb-1 text-sm">Volume</h3>
+            <p className="text-xs text-gray-400">10% of score. Signal confirmation.</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-4 gap-2 mt-4 text-center text-xs">
+          <div className="bg-green-500/10 border border-green-500/30 rounded px-2 py-1 text-green-400">Score 65+ → 🟢 BUY</div>
+          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded px-2 py-1 text-yellow-400">55-64 → 👁️ WATCH</div>
+          <div className="bg-gray-500/10 border border-gray-500/30 rounded px-2 py-1 text-gray-400">40-54 → ⏸️ HOLD</div>
+          <div className="bg-red-500/10 border border-red-500/30 rounded px-2 py-1 text-red-400">Below 40 → 🔴 SELL</div>
         </div>
       </section>
 

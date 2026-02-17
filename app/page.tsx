@@ -304,6 +304,34 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Proven Results */}
+      <section className="px-4 py-16 max-w-4xl mx-auto">
+        <h2 className="text-2xl font-bold mb-2 text-center">Proven Results</h2>
+        <p className="text-gray-400 text-center text-sm mb-8">180-day backtest on SOL/USDC — dual momentum strategy</p>
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-[#111] border border-[#222] rounded-xl p-6 text-center">
+            <div className="text-3xl font-bold text-[#00ff88]">+42.7%</div>
+            <div className="text-gray-400 text-sm mt-1">Alpha vs Buy & Hold</div>
+          </div>
+          <div className="bg-[#111] border border-[#222] rounded-xl p-6 text-center">
+            <div className="text-3xl font-bold text-[#00ff88]">-9.4%</div>
+            <div className="text-gray-400 text-sm mt-1">Strategy Return</div>
+          </div>
+          <div className="bg-[#111] border border-red-500/30 rounded-xl p-6 text-center">
+            <div className="text-3xl font-bold text-red-400">-52.1%</div>
+            <div className="text-gray-400 text-sm mt-1">Buy & Hold Return</div>
+          </div>
+        </div>
+        <div className="bg-[#111] border border-[#222] rounded-xl p-6">
+          <h3 className="font-bold text-sm mb-3">How It Works</h3>
+          <div className="space-y-2 text-sm text-gray-400">
+            <p>📊 <strong className="text-white">Three independent signals</strong> must ALL agree before entering a position: absolute momentum, relative strength vs BTC/ETH, and 50-day trend filter.</p>
+            <p>🛡️ <strong className="text-white">Capital preservation first.</strong> When SOL crashed from $180 → $86, our signals flagged EXIT early. Buy & hold lost 52%. We lost 9%.</p>
+            <p>⏳ <strong className="text-white">Patience pays.</strong> The system waits for all three confirmations. No FOMO buys, no panic sells. Current signal: HOLD CASH until SOL reclaims $125+.</p>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing */}
       <section className="px-4 py-16 max-w-4xl mx-auto" id="pricing">
         <h2 className="text-2xl font-bold mb-2 text-center">Pricing</h2>

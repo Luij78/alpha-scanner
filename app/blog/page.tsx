@@ -1,17 +1,49 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Best Crypto Unusual Activity Scanner 2026 | AlphaScanner',
-  description: 'Detect crypto volume spikes, whale movements, and price anomalies before the crowd. Real-time scanning powered by AI. Free tier available.',
-  keywords: 'crypto scanner, unusual activity detector, whale tracker, volume spike alert, crypto trading tool, bitcoin scanner',
-  openGraph: {
-    title: 'AlphaScanner — Crypto Unusual Activity Scanner',
-    description: 'Real-time crypto unusual activity detection. Volume spikes, whale movements, price anomalies.',
-    type: 'article',
-  },
+  title: 'Crypto Trading Blog — AlphaScanner',
+  description: 'Crypto trading strategies, scanner reviews, momentum analysis, and buy/sell signal guides. Updated weekly.',
+  keywords: 'crypto trading blog, crypto scanner, momentum trading, crypto signals',
 }
 
-export default function BlogPage() {
+const articles = [
+  {
+    slug: '/blog/crypto-momentum-trading',
+    title: 'Crypto Momentum Trading: How Dual Momentum Beat Buy-and-Hold by 42.7%',
+    desc: 'Backtested on SOL over 180 days. Real results, real alpha. Step-by-step guide to the Dual Momentum strategy.',
+    date: 'February 2026',
+    read: '10 min',
+    tag: 'Strategy',
+  },
+  {
+    slug: '/blog/crypto-buy-sell-signals',
+    title: 'Free Crypto Buy & Sell Signals: How to Use Momentum Scoring',
+    desc: 'Understanding the 0-100 scoring system, multi-timeframe analysis, and how to act on BUY/SELL signals without losing your shirt.',
+    date: 'February 2026',
+    read: '7 min',
+    tag: 'Signals',
+  },
+  {
+    slug: '/blog/best-crypto-scanners',
+    title: 'Best Crypto Scanners in 2026: Free & Paid Tools Compared',
+    desc: 'CoinGecko vs TradingView vs Nansen vs AlphaScanner. Features, pricing, and which is right for you.',
+    date: 'February 2026',
+    read: '8 min',
+    tag: 'Reviews',
+  },
+  {
+    slug: '/blog',
+    title: 'How to Detect Crypto Unusual Activity Before Everyone Else',
+    desc: 'Volume spikes, whale movements, price anomalies. What to look for and how automated scanning catches what you miss.',
+    date: 'February 2026',
+    read: '5 min',
+    tag: 'Guide',
+    isIndex: true,
+  },
+]
+
+export default function BlogIndex() {
   return (
     <div style={{
       minHeight: '100vh',
@@ -20,115 +52,64 @@ export default function BlogPage() {
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       padding: '60px 20px',
     }}>
-      <article style={{ maxWidth: '720px', margin: '0 auto', lineHeight: 1.8 }}>
-        <h1 style={{
-          fontSize: '2.2rem',
-          fontWeight: 800,
-          color: '#fff',
-          marginBottom: '16px',
-          lineHeight: 1.3,
-        }}>
-          How to Detect Crypto Unusual Activity Before Everyone Else
+      <div style={{ maxWidth: '720px', margin: '0 auto' }}>
+        <Link href="/" style={{ color: '#00d4ff', textDecoration: 'none', fontSize: '.9rem' }}>← Back to Scanner</Link>
+        <h1 style={{ fontSize: '2.2rem', fontWeight: 800, color: '#fff', margin: '24px 0 8px' }}>
+          AlphaScanner Blog
         </h1>
-        <p style={{ color: '#64748b', marginBottom: '32px', fontSize: '.9rem' }}>
-          Updated February 2026 · 5 min read
+        <p style={{ color: '#64748b', marginBottom: '40px' }}>
+          Crypto trading strategies, scanner guides, and market analysis. Written by traders, for traders.
         </p>
 
-        <p style={{ marginBottom: '24px' }}>
-          The crypto market moves fast. By the time a token trends on X or makes it to CoinGecko's 
-          trending list, the early money has already been made. The traders who consistently profit 
-          aren't reacting to news — they're detecting <strong style={{color:'#00d4ff'}}>unusual activity</strong> before it becomes news.
-        </p>
-
-        <h2 style={{ fontSize: '1.5rem', color: '#fff', margin: '32px 0 16px' }}>
-          What Is Unusual Activity in Crypto?
-        </h2>
-        <p style={{ marginBottom: '16px' }}>
-          Unusual activity refers to sudden, significant deviations from a token's normal trading patterns:
-        </p>
-        <ul style={{ marginBottom: '24px', paddingLeft: '20px' }}>
-          <li style={{ marginBottom: '8px' }}><strong style={{color:'#00d4ff'}}>Volume Spikes:</strong> Trading volume jumps 3-10x above the 7-day average. Often precedes major price moves by hours.</li>
-          <li style={{ marginBottom: '8px' }}><strong style={{color:'#00d4ff'}}>Whale Movements:</strong> Large holders accumulating or distributing. On-chain data shows wallets moving $100K+ positions.</li>
-          <li style={{ marginBottom: '8px' }}><strong style={{color:'#00d4ff'}}>Price Anomalies:</strong> Sudden price deviations without matching volume — potential manipulation or early-stage accumulation.</li>
-          <li style={{ marginBottom: '8px' }}><strong style={{color:'#00d4ff'}}>Correlation Breaks:</strong> When a token moves independently from BTC/ETH, something specific is happening.</li>
-        </ul>
-
-        <h2 style={{ fontSize: '1.5rem', color: '#fff', margin: '32px 0 16px' }}>
-          Why Manual Scanning Doesn't Work
-        </h2>
-        <p style={{ marginBottom: '24px' }}>
-          There are over 15,000 tokens on major exchanges. Manually watching charts for even 50 tokens 
-          means you're missing 14,950 opportunities at any given moment. The math doesn't work. 
-          You need automated scanning that watches everything and alerts you to what matters.
-        </p>
-
-        <h2 style={{ fontSize: '1.5rem', color: '#fff', margin: '32px 0 16px' }}>
-          How AlphaScanner Works
-        </h2>
-        <p style={{ marginBottom: '16px' }}>
-          AlphaScanner monitors hundreds of tokens in real-time using the CoinGecko API, applying three 
-          detection algorithms simultaneously:
-        </p>
-        <ol style={{ marginBottom: '24px', paddingLeft: '20px' }}>
-          <li style={{ marginBottom: '8px' }}><strong>Volume Anomaly Detection:</strong> Compares current 1h volume against 7-day rolling average. Triggers on 3x+ deviations.</li>
-          <li style={{ marginBottom: '8px' }}><strong>Price Momentum Scoring:</strong> Tracks price change velocity across 1h, 24h, and 7d windows. Identifies acceleration patterns.</li>
-          <li style={{ marginBottom: '8px' }}><strong>Market Cap/Volume Ratio:</strong> Flags tokens where trading volume is disproportionate to market cap — a classic pre-breakout signal.</li>
-        </ol>
-
-        <div style={{
-          background: 'rgba(0,212,255,0.08)',
-          border: '1px solid rgba(0,212,255,0.2)',
-          borderRadius: '12px',
-          padding: '24px',
-          marginBottom: '32px',
-          textAlign: 'center' as const,
-        }}>
-          <p style={{ fontSize: '1.1rem', color: '#fff', marginBottom: '12px', fontWeight: 600 }}>
-            Ready to catch the next spike before it happens?
-          </p>
-          <p style={{ color: '#94a3b8', marginBottom: '16px' }}>
-            Free tier scans top 100 tokens. Pro ($29/mo) unlocks full market coverage + alerts.
-          </p>
-          <a href="/" style={{
-            display: 'inline-block',
-            padding: '12px 32px',
-            background: 'linear-gradient(135deg, #00d4ff, #0099cc)',
-            color: '#000',
-            borderRadius: '10px',
-            fontWeight: 600,
-            textDecoration: 'none',
-            fontSize: '1rem',
-          }}>
-            Try AlphaScanner Free →
-          </a>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {articles.filter(a => !a.isIndex).map(a => (
+            <Link key={a.slug} href={a.slug} style={{ textDecoration: 'none', color: 'inherit' }}>
+              <article style={{
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: '12px',
+                padding: '24px',
+                transition: 'border-color 0.2s',
+              }}>
+                <div style={{ display: 'flex', gap: '12px', marginBottom: '8px', alignItems: 'center' }}>
+                  <span style={{
+                    fontSize: '.75rem',
+                    padding: '2px 8px',
+                    background: 'rgba(0,212,255,0.1)',
+                    color: '#00d4ff',
+                    borderRadius: '4px',
+                    fontWeight: 600,
+                  }}>{a.tag}</span>
+                  <span style={{ fontSize: '.8rem', color: '#64748b' }}>{a.date} · {a.read}</span>
+                </div>
+                <h2 style={{ fontSize: '1.2rem', color: '#fff', margin: '0 0 8px', fontWeight: 600 }}>{a.title}</h2>
+                <p style={{ color: '#94a3b8', margin: 0, fontSize: '.95rem', lineHeight: 1.6 }}>{a.desc}</p>
+              </article>
+            </Link>
+          ))}
         </div>
 
-        <h2 style={{ fontSize: '1.5rem', color: '#fff', margin: '32px 0 16px' }}>
-          What Traders Are Saying
-        </h2>
-        <p style={{ marginBottom: '24px', fontStyle: 'italic', color: '#94a3b8' }}>
-          "The volume spike alerts alone paid for a year of Pro in my first week. Caught BONK's 
-          40% run three hours before CT noticed." — Early beta tester
-        </p>
+        <div style={{ marginTop: '48px', padding: '24px', background: 'rgba(0,212,255,0.05)', border: '1px solid rgba(0,212,255,0.15)', borderRadius: '12px', textAlign: 'center' }}>
+          <p style={{ color: '#fff', fontWeight: 600, marginBottom: '8px' }}>Want signals in your inbox?</p>
+          <p style={{ color: '#94a3b8', marginBottom: '16px', fontSize: '.9rem' }}>Join the waitlist for daily BUY/SELL email reports.</p>
+          <Link href="/" style={{
+            display: 'inline-block',
+            padding: '10px 24px',
+            background: 'linear-gradient(135deg, #00d4ff, #0099cc)',
+            color: '#000',
+            borderRadius: '8px',
+            fontWeight: 600,
+            textDecoration: 'none',
+          }}>
+            Open Scanner & Join Waitlist →
+          </Link>
+        </div>
 
-        <h2 style={{ fontSize: '1.5rem', color: '#fff', margin: '32px 0 16px' }}>
-          Getting Started
-        </h2>
-        <p style={{ marginBottom: '24px' }}>
-          AlphaScanner's free tier gives you real-time scanning of the top 100 tokens by market cap. 
-          No credit card required. Upgrade to Pro when you're ready for full market coverage, 
-          custom alert thresholds, and webhook integrations.
-        </p>
-
-        <p style={{ marginBottom: '48px' }}>
-          The crypto market doesn't sleep, and neither does AlphaScanner. Start scanning now.
-        </p>
-
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '24px', color: '#64748b', fontSize: '.85rem' }}>
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '24px', marginTop: '48px', color: '#64748b', fontSize: '.85rem' }}>
           <p>Built by <a href="https://x.com/luij78" style={{color:'#00d4ff',textDecoration:'none'}}>@luij78</a> · 
           More tools at <a href="https://luis-tools-store.vercel.app" style={{color:'#00d4ff',textDecoration:'none'}}>luis-tools-store.vercel.app</a></p>
         </div>
-      </article>
+      </div>
     </div>
   )
 }

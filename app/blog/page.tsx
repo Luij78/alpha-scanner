@@ -9,6 +9,14 @@ export const metadata: Metadata = {
 
 const articles = [
   {
+    slug: '/blog/crypto-telegram-signal-bots',
+    title: 'Best Crypto Telegram Signal Bots 2026: Free vs Paid Compared',
+    desc: 'We tested 10+ Telegram signal bots. Here are the 5 best free options, why momentum scanners beat social bots, and how to avoid getting rekt.',
+    date: 'February 2026',
+    read: '8 min',
+    tag: 'Bots',
+  },
+  {
     slug: '/blog/crypto-momentum-trading',
     title: 'Crypto Momentum Trading: How Dual Momentum Beat Buy-and-Hold by 42.7%',
     desc: 'Backtested on SOL over 180 days. Real results, real alpha. Step-by-step guide to the Dual Momentum strategy.',
@@ -31,15 +39,6 @@ const articles = [
     date: 'February 2026',
     read: '8 min',
     tag: 'Reviews',
-  },
-  {
-    slug: '/blog',
-    title: 'How to Detect Crypto Unusual Activity Before Everyone Else',
-    desc: 'Volume spikes, whale movements, price anomalies. What to look for and how automated scanning catches what you miss.',
-    date: 'February 2026',
-    read: '5 min',
-    tag: 'Guide',
-    isIndex: true,
   },
 ]
 

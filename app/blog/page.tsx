@@ -9,6 +9,14 @@ export const metadata: Metadata = {
 
 const articles = [
   {
+    slug: '/blog/crypto-trading-signal-api',
+    title: 'Best Free Crypto Trading Signal APIs 2026: Build Your Own Bot',
+    desc: 'Compare CoinGecko, Binance, TaAPI, and AlphaScanner APIs. Which gives you ready-to-use BUY/SELL signals vs raw data you have to process yourself?',
+    date: 'February 2026',
+    read: '11 min',
+    tag: 'APIs',
+  },
+  {
     slug: '/blog/crypto-telegram-signal-bots',
     title: 'Best Crypto Telegram Signal Bots 2026: Free vs Paid Compared',
     desc: 'We tested 10+ Telegram signal bots. Here are the 5 best free options, why momentum scanners beat social bots, and how to avoid getting rekt.',
@@ -61,7 +69,7 @@ export default function BlogIndex() {
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {articles.filter(a => !a.isIndex).map(a => (
+          {articles.map(a => (
             <Link key={a.slug} href={a.slug} style={{ textDecoration: 'none', color: 'inherit' }}>
               <article style={{
                 background: 'rgba(255,255,255,0.03)',

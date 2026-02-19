@@ -10,5 +10,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/blog/crypto-momentum-trading`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.9 },
     { url: `${base}/blog/crypto-telegram-signal-bots`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.9 },
     { url: `${base}/blog/crypto-trading-signal-api`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.9 },
+    { url: `${base}/blog/altcoin-screener`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.9 },
   ]
 }

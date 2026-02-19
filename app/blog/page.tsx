@@ -48,6 +48,14 @@ const articles = [
     read: '8 min',
     tag: 'Reviews',
   },
+  {
+    slug: '/blog/altcoin-screener',
+    title: 'Best Crypto Altcoin Screener Tools 2026: Find Early Movers Before They Pump',
+    desc: 'Compare LunarCrush, TradingView, CMC, and AlphaScanner. How to spot altcoins with real momentum before the crowd does. Includes a 3-step workflow.',
+    date: 'February 2026',
+    read: '9 min',
+    tag: 'Screeners',
+  },
 ]
 
 export default function BlogIndex() {
